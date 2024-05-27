@@ -88,6 +88,12 @@ async function preHook(url, client) {
         });
         await Network.setExtraHTTPHeaders({headers});
     }
+    const {result, exceptionDetails} = await client.Runtime.evaluate({
+                	expression: "let a = []",
+                	returnByValue: true,
+                	awaitPromise: true,
+            	});
+
 }
 
 function generatePostHook(userMetric) {
@@ -99,17 +105,38 @@ function generatePostHook(userMetric) {
         // allow to add the output of user-provided code to the HAR
         let user;
         if (userMetric) {
-            const {result, exceptionDetails} = await client.Runtime.evaluate({
-                expression: userMetric,
-                returnByValue: true,
-                awaitPromise: true,
-            });
-            // return the result or the error message
-            if (exceptionDetails) {
-                user = exceptionDetails.exception.description;
-            } else {
-                user = result.value;
-            }
+	    user = [];
+	    for (let i = 0; i < 50; i++) {
+		const {result, exceptionDetails} = await client.Runtime.evaluate({
+                	expression: userMetric,
+                	returnByValue: true,
+                	awaitPromise: true,
+            	});
+            	// return the result or the error message
+            	if (exceptionDetails) {
+                	user = exceptionDetails.exception.description;
+			break;
+            	} else {
+			// user = result.value
+                	user.push(result.value);
+			user.push(Date.now());
+            	}
+		// const {qual_result, qual_exceptionDetails} = await client.Runtime.evaluate({
+                // 	expression: "document.getElementById('movie_player').getStatsForNerds(0).resolution",
+                // 	returnByValue: true,
+                // 	awaitPromise: true,
+            	// });
+            	// // return the result or the error message
+            	// if (qual_exceptionDetails) {
+                // 	user = exceptionDetails.exception.description;
+		// 	break;
+            	// } else {
+		// 	// user = result.value
+                // 	user.push(qual_result.value);
+		// 	user.push(Date.now());
+            	// }
+		await new Promise(r=>setTimeout(r,100));
+	    }
         }
         return user;
     };
